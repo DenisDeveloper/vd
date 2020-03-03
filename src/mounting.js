@@ -6,18 +6,12 @@ import {
   isNull,
   insertOrAppend,
   isString,
-  isFunction
+  isFunction,
+  safeCall1,
+  mountRef
 } from "./common";
 
-const mountRef = (ref, value, lifecycle) => {
-  if (ref && (isFunction(ref) || ref.current !== void 0)) {
-    lifecycle.push(() => {
-      if (!safeCall1(ref, value) && ref.current !== void 0) {
-        ref.current = value;
-      }
-    });
-  }
-};
+import { mountProps } from "./props";
 
 const mountArrayChildren = (children, dom, nextNode, lifecycle) => {
   for (let i = 0; i < children.length; ++i) {
@@ -64,16 +58,9 @@ const mountElement = (vNode, parentDOM, nextNode, lifecycle) => {
   }
 
   if (!isNull(props)) {
-    mountProps(vNode, flags, props, dom, isSVG);
+    mountProps(vNode, flags, props, dom);
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    if (isString(vNode.ref)) {
-      throwError(
-        'string "refs" are not supported in Inferno 1.0. Use callback ref or Inferno.createRef() API instead.'
-      );
-    }
-  }
   mountRef(vNode.ref, dom, lifecycle);
 };
 
@@ -82,8 +69,6 @@ const mount = (vNode, parentDOM, nextNode, lifecycle) => {
 
   if (flags & VNodeFlags.Element) {
     mountElement(vNode, parentDOM, nextNode, lifecycle);
-  } else if (flags & VNodeFlags.ComponentClass) {
-    mountClassComponent(vNode, parentDOM, nextNode, lifecycle);
   } else if (flags & VNodeFlags.ComponentFunction) {
     mountFunctionalComponent(vNode, parentDOM, nextNode, lifecycle);
     mountFunctionalComponentCallbacks(vNode, lifecycle);

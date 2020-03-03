@@ -2,6 +2,7 @@ import { VNodeFlags } from "./Flags";
 import { mount } from "./mounting";
 import { callAll, isNullOrUndef } from "./common";
 import { isFunction } from "./common";
+import { patch } from "./patching";
 
 const options = {
   componentComparator: null,
@@ -78,7 +79,7 @@ const render = (input, parentDOM) => {
       if (input.flags & VNodeFlags.InUse) {
         input = directClone(input);
       }
-      patch(rootInput, input, parentDOM, context, false, null, lifecycle);
+      patch(rootInput, input, parentDOM, null, lifecycle);
       rootInput = parentDOM.$V = input;
     }
   }

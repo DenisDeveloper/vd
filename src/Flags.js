@@ -2,7 +2,6 @@ export const VNodeFlags = {
   /* First set of bits define shape of vNode */
   HtmlElement: 1,
   ComponentUnknown: 2,
-  ComponentClass: 4,
   ComponentFunction: 8,
   Text: 16,
 

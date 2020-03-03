@@ -86,30 +86,43 @@ const rb = dbs => {
 
 // const data = rb(generateData(false).toArray());
 
-const textContent = createVNode(
-  1,
-  "div",
-  "text",
-  "dddddd",
-  16,
-  null,
-  null,
-  null
-);
+const textContent = v =>
+  createVNode(
+    1,
+    "div",
+    "text",
+    v,
+    16,
+    { style: "width: 40px;", onClick: () => console.log("child") },
+    null,
+    null
+  );
 
 const elem = document.getElementById("root");
 
-const app = createVNode(
-  1,
-  "div",
-  "foo1",
-  createVNode(1, "div", "foo2", [textContent], 4, null, null, null),
-  2,
-  null,
-  null,
-  null
-);
+const renderApp = v => {
+  return createVNode(
+    1,
+    "div",
+    "foo1",
+    createVNode(1, "div", "foo2", [textContent(v)], 4, null, null, null),
+    2,
+    { onClick: () => console.log("root") },
+    null,
+    (a, b) => console.log(a)
+  );
+};
 
-console.log(app);
+// console.log(app);
+let count = 0;
 
-render(app, elem);
+render(renderApp(count), elem);
+setTimeout(() => {
+  count++;
+  render(renderApp("ffff"), elem);
+}, 2000);
+
+// setInterval(() => {
+//   count++;
+//   render(renderApp(count), elem);
+// }, 300);

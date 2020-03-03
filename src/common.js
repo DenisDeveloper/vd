@@ -4,6 +4,24 @@ const callAll = arrayFn => {
   }
 };
 
+const mountRef = (ref, value, lifecycle) => {
+  if (ref && (isFunction(ref) || ref.current !== void 0)) {
+    lifecycle.push(() => {
+      if (!safeCall1(ref, value) && ref.current !== void 0) {
+        ref.current = value;
+      }
+    });
+  }
+};
+
+const unmountRef = ref => {
+  if (ref) {
+    if (!safeCall1(ref, null) && ref.current) {
+      ref.current = null;
+    }
+  }
+};
+
 const appendChild = (parentDOM, dom) => {
   parentDOM.appendChild(dom);
 };
@@ -44,7 +62,21 @@ const setTextContent = (dom, children) => {
   dom.textContent = children;
 };
 
+const EMPTY_OBJ = {};
+
+const normalizeEventName = name => {
+  return name.substr(2).toLowerCase();
+};
+
+const safeCall1 = (method, arg1) => {
+  return !!isFunction(method) && (method(arg1), true);
+};
+
 export {
+  mountRef,
+  unmountRef,
+  safeCall1,
+  normalizeEventName,
   callAll,
   documentCreateElement,
   isNullOrUndef,
@@ -54,5 +86,6 @@ export {
   insertOrAppend,
   appendChild,
   isString,
-  isNumber
+  isNumber,
+  EMPTY_OBJ
 };
