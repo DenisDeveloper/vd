@@ -24,6 +24,21 @@ const getTargetNode = event => {
     : event.target;
 };
 
+export function unmountSyntheticEvent(name, dom) {
+  const eventsObject = dom.$EV;
+
+  if (eventsObject && eventsObject[name]) {
+    if (--attachedEventCounts[name] === 0) {
+      document.removeEventListener(
+        normalizeEventName(name),
+        attachedEvents[name]
+      );
+      attachedEvents[name] = null;
+    }
+    eventsObject[name] = null;
+  }
+}
+
 const dispatchEvents = (event, isClick, name, eventData) => {
   let dom = getTargetNode(event);
   do {

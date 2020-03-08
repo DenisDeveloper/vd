@@ -11,6 +11,8 @@ import {
   mountRef
 } from "./common";
 
+import { directClone } from "./core";
+
 import { mountProps } from "./props";
 
 const mountArrayChildren = (children, dom, nextNode, lifecycle) => {
@@ -24,8 +26,16 @@ const mountArrayChildren = (children, dom, nextNode, lifecycle) => {
   }
 };
 
+const mountText = (vNode, parentDOM, nextNode) => {
+  const dom = (vNode.dom = document.createTextNode(vNode.children));
+
+  if (!isNull(parentDOM)) {
+    insertOrAppend(parentDOM, dom, nextNode);
+  }
+};
+
 const mountElement = (vNode, parentDOM, nextNode, lifecycle) => {
-  // console.log(`vNode: ${vNode.className}, nextNode: ${nextNode}`);
+  // console.log(vNode.flags);
   const flags = vNode.flags;
   const props = vNode.props;
   const className = vNode.className;
@@ -69,15 +79,8 @@ const mount = (vNode, parentDOM, nextNode, lifecycle) => {
 
   if (flags & VNodeFlags.Element) {
     mountElement(vNode, parentDOM, nextNode, lifecycle);
-  } else if (flags & VNodeFlags.ComponentFunction) {
-    mountFunctionalComponent(vNode, parentDOM, nextNode, lifecycle);
-    mountFunctionalComponentCallbacks(vNode, lifecycle);
   } else if (flags & VNodeFlags.Void || flags & VNodeFlags.Text) {
     mountText(vNode, parentDOM, nextNode);
-  } else if (flags & VNodeFlags.Fragment) {
-    mountFragment(vNode, parentDOM, nextNode, lifecycle);
-  } else if (flags & VNodeFlags.Portal) {
-    mountPortal(vNode, parentDOM, nextNode, lifecycle);
   }
 };
 

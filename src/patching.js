@@ -4,9 +4,28 @@ import {
   EMPTY_OBJ,
   safeCall1,
   unmountRef,
-  mountRef
+  mountRef,
+  findDOMfromVNode,
+  removeVNodeDOM,
+  setTextContent
 } from "./common";
 import { patchProp } from "./props";
+import { unmount, unmountAllChildren, remove } from "./unmounting";
+import { mount } from "./mounting";
+import { directClone } from "./core";
+
+function replaceWithNewNode(lastVNode, nextVNode, parentDOM, lifecycle) {
+  unmount(lastVNode);
+
+  if ((nextVNode.flags & lastVNode.flags & VNodeFlags.DOMRef) !== 0) {
+    mount(nextVNode, null, context, isSVG, null, lifecycle);
+    // Single DOM operation, when we have dom references available
+    replaceChild(parentDOM, nextVNode.dom, lastVNode.dom);
+  } else {
+    mount(nextVNode, parentDOM, findDOMfromVNode(lastVNode, true), lifecycle);
+    removeVNodeDOM(lastVNode, parentDOM);
+  }
+}
 
 const patchSingleTextChild = (lastChildren, nextChildren, parentDOM) => {
   if (lastChildren !== nextChildren) {
@@ -15,6 +34,15 @@ const patchSingleTextChild = (lastChildren, nextChildren, parentDOM) => {
     } else {
       setTextContent(parentDOM, nextChildren);
     }
+  }
+};
+
+const patchText = (lastVNode, nextVNode) => {
+  const nextText = nextVNode.children;
+  const dom = (nextVNode.dom = lastVNode.dom);
+
+  if (nextText !== lastVNode.children) {
+    dom.nodeValue = nextText;
   }
 };
 
@@ -53,7 +81,7 @@ const patchNonKeyedChildren = (
       if (nextChild.flags & VNodeFlags.InUse) {
         nextChild = nextChildren[i] = directClone(nextChild);
       }
-      mount(nextChild, dom, context, isSVG, nextNode, lifecycle);
+      mount(nextChild, dom, nextNode, lifecycle);
     }
   } else if (lastChildrenLength > nextChildrenLength) {
     for (i = commonLength; i < lastChildrenLength; ++i) {
@@ -298,32 +326,10 @@ const patch = (lastVNode, nextVNode, parentDOM, nextNode, lifecycle) => {
     }
   } else if (nextFlags & VNodeFlags.Element) {
     patchElement(lastVNode, nextVNode, nextFlags, lifecycle);
-  } else if (nextFlags & VNodeFlags.ComponentClass) {
-    patchClassComponent(
-      lastVNode,
-      nextVNode,
-      parentDOM,
-      context,
-      isSVG,
-      nextNode,
-      lifecycle
-    );
-  } else if (nextFlags & VNodeFlags.ComponentFunction) {
-    patchFunctionalComponent(
-      lastVNode,
-      nextVNode,
-      parentDOM,
-      nextNode,
-      lifecycle
-    );
   } else if (nextFlags & VNodeFlags.Text) {
     patchText(lastVNode, nextVNode);
   } else if (nextFlags & VNodeFlags.Void) {
     nextVNode.dom = lastVNode.dom;
-  } else if (nextFlags & VNodeFlags.Fragment) {
-    patchFragment(lastVNode, nextVNode, parentDOM, lifecycle);
-  } else {
-    patchPortal(lastVNode, nextVNode, lifecycle);
   }
 };
 

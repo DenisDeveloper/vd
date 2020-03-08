@@ -1,8 +1,59 @@
+import { VNodeFlags, ChildFlags } from "./Flags";
+
 const callAll = arrayFn => {
   for (let i = 0; i < arrayFn.length; i++) {
     arrayFn[i]();
   }
 };
+
+export function removeChild(parentDOM, childNode) {
+  parentDOM.removeChild(childNode);
+}
+
+export function removeVNodeDOM(vNode, parentDOM) {
+  do {
+    const flags = vNode.flags;
+
+    if (flags & VNodeFlags.DOMRef) {
+      removeChild(parentDOM, vNode.dom);
+      return;
+    }
+    const children = vNode.children;
+
+    if (flags & VNodeFlags.ComponentClass) {
+      vNode = children.$LI;
+    }
+    if (flags & VNodeFlags.ComponentFunction) {
+      vNode = children;
+    }
+    if (flags & VNodeFlags.Fragment) {
+      if (vNode.childFlags === ChildFlags.HasVNodeChildren) {
+        vNode = children;
+      } else {
+        for (let i = 0, len = children.length; i < len; ++i) {
+          removeVNodeDOM(children[i], parentDOM);
+        }
+        return;
+      }
+    }
+  } while (vNode);
+}
+
+export function findDOMfromVNode(vNode, startEdge) {
+  let flags;
+
+  while (vNode) {
+    flags = vNode.flags;
+
+    if (flags & VNodeFlags.DOMRef) {
+      return vNode.dom;
+    }
+
+    vNode = findChildVNode(vNode, startEdge, flags);
+  }
+
+  return null;
+}
 
 const mountRef = (ref, value, lifecycle) => {
   if (ref && (isFunction(ref) || ref.current !== void 0)) {

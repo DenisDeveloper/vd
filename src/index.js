@@ -1,92 +1,19 @@
 import { createVNode, render } from "./core";
+import * as GM from "./gm/core";
 
-const rb = dbs => {
-  let length = dbs.length;
-  let databases = [];
+const txt = v =>
+  createVNode(
+    16,
+    "div",
+    "text",
+    v,
+    16,
+    { style: "width: 40px;", onClick: () => console.log("child") },
+    null,
+    null
+  );
 
-  for (let i = 0; i < length; i++) {
-    let db = dbs[i];
-    let lastSample = db.lastSample;
-    let children = [
-      createVNode(1, "div", "dbname", db.dbname, 16, null, null, null),
-      createVNode(
-        1,
-        "div",
-        "query-count",
-        createVNode(
-          1,
-          "div",
-          lastSample.countClassName,
-          lastSample.nbQueries,
-          16,
-          null,
-          null,
-          null
-        ),
-        2,
-        null,
-        null,
-        null
-      )
-    ];
-
-    for (let i2 = 0; i2 < 5; i2++) {
-      let query = lastSample.topFiveQueries[i2];
-
-      children.push(
-        createVNode(
-          1,
-          "div",
-          query.elapsedClassName,
-          [
-            createVNode(
-              1,
-              "div",
-              null,
-              query.formatElapsed,
-              16,
-              null,
-              null,
-              null
-            ),
-            createVNode(
-              1,
-              "div",
-              "popover left",
-              [
-                createVNode(
-                  1,
-                  "div",
-                  "popover-content",
-                  query.query,
-                  16,
-                  null,
-                  null,
-                  null
-                ),
-                createVNode(1, "div", "arrow", null, 1, null, null, null)
-              ],
-              4,
-              null,
-              null,
-              null
-            )
-          ],
-          4,
-          null,
-          null,
-          null
-        )
-      );
-    }
-    databases.push(createVNode(1, "div", null, children, 4, null, null, null));
-  }
-  return databases;
-};
-
-// const data = rb(generateData(false).toArray());
-
-const textContent = v =>
+const div = v =>
   createVNode(
     1,
     "div",
@@ -100,29 +27,43 @@ const textContent = v =>
 
 const elem = document.getElementById("root");
 
+const foo1 = (a, b) =>
+  createVNode(1, "div", "foo1_2", [a, b, b, b], 4, null, null, null);
+const foo2 = (a, b) => {
+  return createVNode(1, "div", "foo2_2", [b, a], 4, null, null, null);
+};
+
 const renderApp = v => {
   return createVNode(
     1,
     "div",
     "foo1",
-    createVNode(1, "div", "foo2", [textContent(v)], 4, null, null, null),
+    v,
     2,
     { onClick: () => console.log("root") },
     null,
-    (a, b) => console.log(a)
+    null
   );
 };
 
 // console.log(app);
 let count = 0;
 
-render(renderApp(count), elem);
+render(renderApp(foo1(txt("a"), div("b"))), elem);
 setTimeout(() => {
   count++;
-  render(renderApp("ffff"), elem);
+  render(renderApp(foo2(txt("a"), div("b"))), elem);
 }, 2000);
 
 // setInterval(() => {
 //   count++;
 //   render(renderApp(count), elem);
 // }, 300);
+
+const elem2 = document.getElementById("root2");
+const app = v => GM.node("div", "gm-foo", null, [v]);
+const gmTxt = v => GM.text("gm_text");
+const gmDiv = v => GM.node("h3", null, null, [v]);
+
+// todo: patching
+GM.render(app(gmDiv(gmTxt())), elem2);

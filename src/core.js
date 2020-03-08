@@ -4,12 +4,6 @@ import { callAll, isNullOrUndef } from "./common";
 import { isFunction } from "./common";
 import { patch } from "./patching";
 
-const options = {
-  componentComparator: null,
-  createVNode: null,
-  renderComplete: null
-};
-
 function V(childFlags, children, className, flags, key, props, ref, type) {
   this.childFlags = childFlags;
   this.children = children;
@@ -44,23 +38,29 @@ const createVNode = (
     type
   );
 
-  if (options.createVNode) {
-    options.createVNode(vNode);
-  }
-
   return vNode;
 };
 
-const renderCheck = {
-  v: false
-};
+export function directClone(vNodeToClone) {
+  const flags = vNodeToClone.flags & VNodeFlags.ClearInUse;
+  let props = vNodeToClone.props;
+
+  return new V(
+    vNodeToClone.childFlags,
+    vNodeToClone.children,
+    vNodeToClone.className,
+    flags,
+    vNodeToClone.key,
+    props,
+    vNodeToClone.ref,
+    vNodeToClone.type
+  );
+}
 
 const render = (input, parentDOM) => {
+  // console.log("render");
   const lifecycle = [];
   let rootInput = parentDOM.$V;
-  // console.log(parentDOM);
-
-  renderCheck.v = true;
 
   if (isNullOrUndef(rootInput)) {
     if (!isNullOrUndef(input)) {
@@ -84,10 +84,6 @@ const render = (input, parentDOM) => {
     }
   }
   callAll(lifecycle);
-  renderCheck.v = false;
-  if (isFunction(options.renderComplete)) {
-    options.renderComplete(rootInput, parentDOM);
-  }
 };
 
 export { createVNode, render };
